@@ -24,6 +24,8 @@ class Information(commands.Cog):
     @commands.command()
     @commands.guild_only()
     async def homechannel(self, ctx):
+        """ Shows the server's home channel (where welcome messages get sent) """
+
         home = self.bot.server_data.get_home_channel(str(ctx.message.guild.id))
         if home is None:
             await ctx.send("No home channel found for this server")

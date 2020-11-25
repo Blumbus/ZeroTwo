@@ -76,7 +76,6 @@ class Events(commands.Cog):
 
 	@commands.Cog.listener()
 	async def on_member_join(self, member):
-		print('ayo')
 		server = member.guild
 		print(server.id)
 		if str(server.id) in self.bot.server_data.data['servers']:
@@ -105,9 +104,8 @@ class Events(commands.Cog):
 			since = self.bot.server_data.time_since_active(server_id, user_id)
 			xp = int(math.log((since + 5) / 5, since + 2) * 25)
 			prev, post = self.bot.server_data.give_xp(server_id, user_id, xp)
-			prev_coins, post_coins = self.bot.server_data.give_coins(server_id, user_id, int(xp / 2))
+			prev_coins, post_coins = self.bot.server_data.give_energy(server_id, user_id, int(xp / 2))
 			self.bot.server_data.set_last_active(server_id, user_id)
-			print(f"{message.author.name} last active {str(since)} seconds ago and awarded **{str(xp)}** xp (previously {prev}, now {post})")
 			rank_xps = self.bot.server_data.get_rank_xps(server_id)
 			for rank in rank_xps:
 				if rank_xps[rank] <= post:

@@ -1,16 +1,13 @@
 import random
 import discord
-import urllib
-import secrets
-import asyncio
 import aiohttp
-import re
+import asyncio
 
 from io import BytesIO
 
 from discord import Member, Role
 from discord.ext import commands
-from utils import lists, permissions, http, default, argparser
+from utils import lists, permissions, http, default
 
 
 class Fun_Commands(commands.Cog):
@@ -79,6 +76,117 @@ class Fun_Commands(commands.Cog):
     async def __add_role(self, member: Member, role: Role):
         await member.add_roles(role)
 
+    @commands.command()
+    @commands.guild_only()
+    async def scramble(self, ctx, channel: discord.TextChannel = None, member: Member = None):
+        """ Scrambles a random message from the channel's content """
+
+        thos = 'that'
+        if channel is None:
+            channel = ctx.message.channel
+            thos = 'this'
+        allowed = self.bot.server_data.allowed_scramble(channel)
+        if permissions.has_permissions(manage_roles=True):
+            allowed = True
+        if allowed is not True:
+            await ctx.send(f"You're not allowed to scramble {thos} channel!")
+            return
+        shop = self.bot.get_cog('Shop')
+        purchased = await shop.purchase(ctx)
+        if not purchased:
+            return
+        async with ctx.typing():
+            scramb = await self.get_scramble(channel, member)
+        await ctx.send(scramb)
+
+    async def get_scramble(self, channel: discord.TextChannel, member: Member = None):
+        chain = {}
+        lim = 3000
+        if member is None:
+            lim = 6000
+        async for message in channel.history(limit=lim):
+            if not message.mention_everyone and message.author.id != self.bot.user.id and (member is None or message.author.id == member.id):
+                words = message.clean_content.split()
+                if len(words) > 1:
+                    for i in range(len(words) - 1):
+                        word1 = words[i]
+                        word2 = words[i + 1]
+                        if word1 not in chain:
+                            chain[word1] = {}
+                        if word2 not in chain[word1]:
+                            chain[word1][word2] = 1
+                        else:
+                            chain[word1][word2] += 1
+
+        sentence_prob = 0.98
+        num_makes = random.randint(50, 60)
+        sent_chain = 0
+        res = ''
+        last_word = None
+        for i in range(num_makes):
+            new_word = ''
+            if last_word is None or last_word not in chain or chain[last_word] is None or len(chain[last_word]) == 0:
+                new_word = random.choice(list(chain.keys()))
+            else:
+                cands = chain[last_word]
+                cand_sum = 0
+                for cand in cands:
+                    cand_sum += cands[cand]
+                dial = random.randrange(0, cand_sum)
+                curr_sum = 0
+                for cand in cands:
+                    curr_sum += cands[cand]
+                    if dial <= curr_sum:
+                        new_word = cand
+                        break
+            res += new_word
+            sent_chain += 1
+            if random.random() > sentence_prob - 0.01 * sent_chain:
+                last_word = None
+                res += '. '
+                sent_chain = 0
+            else:
+                last_word = new_word
+                res += ' '
+        res = res[:-1]
+        res += '.'
+        return res
+
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        if message.author is not None and message.author.id is not None and message.author.id != self.bot.user.id and message.guild is not None and message.channel is not None:
+            if self.bot.server_data.can_random_scramble(message.channel):
+                if random.random() < 0.0005:
+                    async with message.context.typing():
+                        scramb = await self.get_scramble(message.channel)
+                    await message.context.send(scramb)
+
+
+    @commands.command()
+    @commands.guild_only()
+    async def flexrole(self, ctx):
+        """ Puts you at the top of the server list for a day so you can flex on everyone """
+
+        flex_role = None
+        server = ctx.message.guild
+        flex_id = self.bot.server_data.get_flex_role_id(str(server.id))
+        if flex_id is not None:
+            flex_role = server.get_role(flex_id)
+
+        if flex_role is None:
+            return await ctx.send("There is no flex role configured for this server")
+
+        try:
+            shop = self.bot.get_cog('Shop')
+            purchased = await shop.purchase(ctx)
+            if not purchased:
+                return
+            await ctx.author.add_roles(flex_role)
+            await ctx.send(f"Nice, flex on them **{ctx.author.display_name}**!")
+            await asyncio.sleep(86400)
+            await ctx.author.remove_roles(flex_role)
+        except Exception as e:
+            await ctx.send(e)
 
 
 def setup(bot):

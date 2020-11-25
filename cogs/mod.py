@@ -133,6 +133,26 @@ class Moderator(commands.Cog):
     @commands.command()
     @commands.guild_only()
     @permissions.has_permissions(manage_roles=True)
+    async def lock(self, ctx):
+        """ Locks the current channel """
+
+        lock_emoji = chr(0x1F512)
+        await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=False)
+        await ctx.send(f"{lock_emoji} This channel is now locked! {lock_emoji}")
+
+    @commands.command()
+    @commands.guild_only()
+    @permissions.has_permissions(manage_roles=True)
+    async def unlock(self, ctx):
+        """ Unlocks the current channel """
+
+        lock_emoji = chr(0x1F513)
+        await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=None)
+        await ctx.send(f"{lock_emoji} This channel is now unlocked! {lock_emoji}")
+
+    @commands.command()
+    @commands.guild_only()
+    @permissions.has_permissions(manage_roles=True)
     async def sethomechannel(self, ctx):
         """ Sets the default (greet) channel to the current channel """
 
@@ -157,63 +177,21 @@ class Moderator(commands.Cog):
         self.bot.server_data.set_leave_message(str(ctx.message.guild.id), message)
         await ctx.send(f"Set the leave message to \"{message.replace('%USER%', 'Username')}\"")
 
+    @commands.command()
+    @commands.guild_only()
+    @permissions.has_permissions(manage_roles=True)
+    async def setflexrole(self, ctx, role_id: int):
+        """ Sets the flex role id for the current server """
+
+        self.bot.server_data.set_flex_role_id(str(ctx.message.guild.id), role_id)
+        role = ctx.message.guild.get_role(role_id)
+        if role is None:
+            await ctx.send(f"Set the flex role id to {str(role_id)} (No corresponding role!)")
+        else:
+            await ctx.send(f"Set the flex role id to {str(role_id)} (role **{role.name}**)")
+
     def get_server_path(self, server: discord.Guild):
         return "servers." + str(server.id)
-
-    @commands.command()
-    @permissions.has_permissions(manage_roles=True)
-    async def setdatavalue(self, ctx, path: str, *, value: str):
-        """ Sets a specific value in the serverdata ex: servers.777102021425233932.name 'cool server'
-            the value is evaluated as python code """
-
-        if ctx.message.guild != None:
-            path = path.replace('%SERVER%', self.get_server_path(ctx.message.guild))
-        try:
-            ob = eval(value)
-        except (SyntaxError, NameError):
-            await ctx.send(f"Could not evaluate {value}")
-        else:
-            self.bot.server_data.set_data_value(path, ob)
-            await ctx.send(f"Updated value at {path} to {value}")
-
-    @commands.command()
-    @permissions.has_permissions(manage_roles=True)
-    async def deletedatakey(self, ctx, path: str):
-        """ Deletes a specific value in the serverdata ex: 777102021425233932.users.85931152363249664 removes that user """
-
-        if ctx.message.guild != None:
-            path = path.replace('%SERVER%', self.get_server_path(ctx.message.guild))
-        self.bot.server_data.delete_data_key(path)
-        await ctx.send(f"Deleted key at {path}")
-
-    @commands.command()
-    @permissions.has_permissions(manage_roles=True)
-    async def savedata(self, ctx):
-        """ Saves all server data to disk """
-
-        await ctx.send("Saving server data...")
-        try:
-            self.bot.server_data.save_data()
-        except Exception as e:
-            await ctx.send("Unable to save data, keeping original data file")
-            raise e
-        else:
-            await ctx.send("Saved data for all servers")
-
-    @commands.command()
-    @permissions.has_permissions(manage_roles=True)
-    async def getdata(self, ctx):
-        """ First saves all data, then DMs a copy of the JSON """
-
-        try:
-            await self.savedata(ctx)
-        except Exception as e:
-            raise e
-        else:
-            with open('serverdata.json', 'rb') as outfile:
-                await ctx.message.author.send(file=discord.File(outfile, 'serverdata.json'))
-                await ctx.message.add_reaction(chr(0x2709))
-
 
     @commands.command()
     @commands.guild_only()
@@ -223,6 +201,45 @@ class Moderator(commands.Cog):
 
         self.bot.server_data.set_rank_xp(str(ctx.message.guild.id), role, xp)
         await ctx.send(f"Set xp requirement for **{role.name}** to **{str(xp)}**")
+
+    @commands.command()
+    @commands.guild_only()
+    @permissions.has_permissions(manage_roles=True)
+    async def enablescramble(self, ctx, enabled: bool = True):
+        """ Allows scrambling of/in this channel. Use enablescramble false to disable """
+
+        self.bot.server_data.enable_scramble(str(ctx.message.guild.id), str(ctx.message.channel.id), enabled)
+        set_string = 'Enabled'
+        if not enabled:
+            set_string = 'Disabled'
+        await ctx.send(f"{set_string} scramble permissions for this channel")
+
+    @commands.command()
+    @commands.guild_only()
+    @permissions.has_permissions(manage_roles=True)
+    async def setshopprice(self, ctx, name: str, price: int):
+        """ Sets the price of a shop item  """
+
+        self.bot.server_data.set_shop_price(str(ctx.message.guild.id), name, price)
+        await ctx.send(f"Set price for **{name}** to **{str(price)}**")
+
+    @commands.command()
+    @commands.guild_only()
+    @permissions.has_permissions(manage_roles=True)
+    async def giveuserenergy(self, ctx, user: discord.User, energy: int):
+        """ Adds energy to a user's total balance  """
+
+        prev, post = self.bot.server_data.give_energy(str(ctx.message.guild.id), str(user.id), energy)
+        await ctx.send(f"Updated **{user.display_name}**'s magma energy from **{str(prev)}** to **{str(post)}**")
+
+    @commands.command()
+    @commands.guild_only()
+    @permissions.has_permissions(manage_roles=True)
+    async def setuserenergy(self, ctx, user: discord.User, energy: int):
+        """ Sets a user's energy  """
+
+        self.bot.server_data.set_energy(str(ctx.message.guild.id), str(user.id), energy)
+        await ctx.send(f"Updated **{user.display_name}**'s magma energy to **{str(energy)}**")
 
 
 def setup(bot):

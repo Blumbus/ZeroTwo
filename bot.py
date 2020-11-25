@@ -13,12 +13,14 @@ intents = discord.Intents.default()
 intents.reactions = True
 intents.members = True
 
+helper = HelpFormat()
+
 bot = Bot(
     command_prefix=config.prefix,
     intents=intents,
     prefix=config.prefix,
     command_attrs=dict(hidden=True),
-    help_command=HelpFormat()
+    help_command=helper
 )
 
 bot.server_data = ServerData(bot)
