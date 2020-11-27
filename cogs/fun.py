@@ -100,12 +100,11 @@ class Fun_Commands(commands.Cog):
         await ctx.send(scramb)
 
     async def get_scramble(self, channel: discord.TextChannel, member: Member = None):
+        is_bot = member is not None and member.id == self.bot.user.id
         chain = {}
-        lim = 3000
-        if member is None:
-            lim = 6000
-        async for message in channel.history(limit=lim):
-            if not message.mention_everyone and message.author.id != self.bot.user.id and (member is None or message.author.id == member.id):
+        found = 0
+        async for message in channel.history(limit=7000):
+            if (member is None or message.author.id == member.id) and not message.mention_everyone and (is_bot or message.author.id != self.bot.user.id):
                 words = message.clean_content.split()
                 if len(words) > 1:
                     for i in range(len(words) - 1):
@@ -117,12 +116,17 @@ class Fun_Commands(commands.Cog):
                             chain[word1][word2] = 1
                         else:
                             chain[word1][word2] += 1
+                        found += 1
+                if found > 2000:
+                    break
 
         sentence_prob = 0.98
         num_makes = random.randint(50, 60)
         sent_chain = 0
         res = ''
         last_word = None
+        if len(chain) == 0:
+            return f"I couldn't find any recent messages matching what you want {self.config.sad_emoji} Try scrambling something with more recent messages"
         for i in range(num_makes):
             new_word = ''
             if last_word is None or last_word not in chain or chain[last_word] is None or len(chain[last_word]) == 0:
