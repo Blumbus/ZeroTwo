@@ -21,6 +21,8 @@ class Fun_Commands(commands.Cog):
         answer = random.choice(lists.ballresponse)
         await ctx.send(f"🎱 **Question:** {question}\n**Answer:** {answer}")
 
+
+
     async def randomimageapi(self, ctx, url, endpoint):
         try:
             r = await http.get(url, res_method="json", no_cache=True)
@@ -78,6 +80,30 @@ class Fun_Commands(commands.Cog):
 
     @commands.command()
     @commands.guild_only()
+<<<<<<< Updated upstream
+=======
+    @commands.cooldown(1,600,commands.BucketType.channel)
+    async def renamechannel(self, ctx,*,NewName):
+        "Lets you name the current channel to whatever you want for 1 hour"
+
+        channel: discord.TextChannel
+        channel = ctx.message.channel
+        oldname = ctx.message.channel
+        hours = 24
+        seconds = hours*3600
+
+
+        shop = self.bot.get_cog('Shop')
+        purchased = await shop.purchase(ctx)
+
+        if not purchased:
+            ctx.command.reset_cooldown(ctx)
+            return
+        await channel.edit(name=NewName)
+        await ctx.send("Channel name has been changed to " + NewName + " for " + str(hours) + " hours")
+        await asyncio.sleep(seconds)
+        await channel.edit(name=oldname)
+
     async def scramble(self, ctx, channel: discord.TextChannel = None, member: Member = None):
         """ Scrambles a random message from the channel's content """
 
