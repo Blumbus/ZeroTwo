@@ -171,6 +171,15 @@ class Moderator(commands.Cog):
     @commands.command()
     @commands.guild_only()
     @permissions.has_permissions(manage_roles=True)
+    async def setserverinvitelink(self, ctx, *, invitelink: str):
+        "Sets the server invite link"
+
+        self.bot.server_data.set_invite_link(str(ctx.message.guild.id),invitelink)
+        await ctx.send("Set the server invite link to " + invitelink)
+
+    @commands.command()
+    @commands.guild_only()
+    @permissions.has_permissions(manage_roles=True)
     async def setleavemessage(self, ctx, *, message: str):
         """ Sets the leave message for the server (use %USER% for user name, or "none" for no message) """
 

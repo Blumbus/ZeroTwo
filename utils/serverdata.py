@@ -102,6 +102,12 @@ class ServerData:
 		ret = self.bot.get_channel(id=home_id)
 		return ret
 
+	def set_invite_link(self,server_id,invite_link:str):
+		self.data['servers'][str(server_id)]["invite_link"] = invite_link
+
+	def get_invite_link(self,server_id):
+		return self.data['servers'][str(server_id)]["invite_link"]
+
 	def set_join_message(self, server_id, message: str):
 		if message.lower() == 'none':
 			message = ''
@@ -147,6 +153,10 @@ class ServerData:
 		self.try_update_user(server_id, user_id)
 		ret = self.data['servers'][server_id]['users'][user_id]['xp']
 		return ret
+
+	def set_placement(self,server_id: str,user_id: str, rank: int):
+		self.try_update_user(server_id,user_id)
+		self.data['servers'][server_id]['users'][user_id]['rank'] = rank
 
 	def give_energy(self, server_id: str, user_id: str, energy: int):
 		self.try_update_user(server_id, user_id)
