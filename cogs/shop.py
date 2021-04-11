@@ -2,7 +2,7 @@ import asyncio
 import time
 import discord
 import os
-
+import json
 from discord.ext import commands
 from utils import default
 
@@ -22,9 +22,9 @@ class Shop(commands.Cog):
 
 <<<<<<< Updated upstream
 =======
-    @commands.command()
+    @commands.command(aliases = ["top"])
     @commands.guild_only()
-    async def leaderboardthing(self,ctx, page: int = None):
+    async def leaderboard(self,ctx, page: int = None):
         "Displays a leaderboard of total mag for the current server"
 
         file = open('serverdata.json')
@@ -32,9 +32,14 @@ class Shop(commands.Cog):
 
 
         server = str(ctx.message.guild.id)
+        userid = str(ctx.message.author.id)
         servername = data['servers'][server]["name"]
         servericon = ctx.guild.icon_url
         serverlink = data['servers'][server]['invite_link']
+        sendermag = data['servers'][server]['users'][userid]['xp']
+        senderrank = data['servers'][server]['users'][userid]['rank']
+
+
 
         if page is None:
             page = 1
@@ -67,6 +72,8 @@ class Shop(commands.Cog):
         embed.set_thumbnail(url = servericon)
         for slot in range(10):
             embed.add_field(name=f'**Rank {rankswanted[slot]}**', value=f'{users[slot]} with {xpamounts[slot]} mag',inline =False)
+        embed.set_footer(text=f"You are rank {senderrank} with {sendermag} mag")
+
         await ctx.send(embed=embed)
 
     @commands.command()
@@ -96,7 +103,7 @@ class Shop(commands.Cog):
 
 
 
-    @commands.command(aliases = ["leaderboard"])
+    @commands.command()
     @commands.guild_only()
     async def rank(self,ctx):
         "Displays your ranking of how much magma you have compared to others"
