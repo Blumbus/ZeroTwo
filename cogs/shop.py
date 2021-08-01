@@ -20,8 +20,6 @@ class Shop(commands.Cog):
         mag = self.bot.server_data.get_energy(str(ctx.message.guild.id), str(ctx.message.author.id))
         await ctx.send(f"{ctx.message.author.name}'s magma energy: **{mag}**" + self.config.mag_emoji)
 
-<<<<<<< Updated upstream
-=======
     @commands.command(aliases = ["top"])
     @commands.guild_only()
     async def leaderboard(self,ctx, page: int = None):
@@ -124,7 +122,6 @@ class Shop(commands.Cog):
         file.close()
 
 
->>>>>>> Stashed changes
     async def purchase(self, ctx):
         user = ctx.message.author
         command = ctx.command
