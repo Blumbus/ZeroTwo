@@ -78,6 +78,38 @@ class Fun_Commands(commands.Cog):
 
     @commands.command()
     @commands.guild_only()
+    async def renamechannel(self, ctx, *, new_name):
+        """ Lets you name the current channel to whatever you want for 1 hour """
+
+        channel: discord.TextChannel
+        channel = ctx.message.channel
+        oldname = ctx.message.channel.name
+        hours = 1
+        seconds = hours * 3600
+
+        normal_name = self.bot.server_data.get_normal_name(str(ctx.message.guild.id), str(ctx.message.channel.id))
+        if normal_name != '':
+            await ctx.send("The channel is already renamed right now, wait for it to reset first")
+            return
+
+        shop = self.bot.get_cog('Shop')
+        purchased = await shop.purchase(ctx)
+
+        if not purchased:
+            return
+        try:
+            await asyncio.wait_for(channel.edit(name=new_name), timeout=1.0)
+        except asyncio.TimeoutError:
+            await ctx.send("I couldn't rename... that shouldn't happen. Maybe the channel rename was on cooldown?")
+            return
+        self.bot.server_data.set_normal_name(str(ctx.message.guild.id), str(ctx.message.channel.id), oldname)
+        await ctx.send("Channel name has been changed to **" + new_name + "** for " + str(hours) + " hour" if hours == 1 else " hours")
+        await asyncio.sleep(seconds)
+        await channel.edit(name=oldname)
+        self.bot.server_data.set_normal_name(str(ctx.message.guild.id), str(ctx.message.channel.id), '')
+
+    @commands.command()
+    @commands.guild_only()
     async def scramble(self, ctx, channel: discord.TextChannel = None, member: Member = None):
         """ Scrambles a random message from the channel's content """
 

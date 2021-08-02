@@ -6,10 +6,23 @@ from shutil import copy
 from functools import reduce
 import operator
 
+import typing
 from discord import client, Role
 
 from utils import default
 
+
+server_js = {
+	"name": "",
+	"main_channel": 0,
+	"join_message": "",
+	"leave_message": "",
+	"users": {},
+	"shop": {},
+	"ranks": {},
+	"channels": {},
+	"flex_role": 0
+}
 
 user_js = {
 	"xp": 0,
@@ -20,7 +33,8 @@ user_js = {
 channel_js = {
 	"words": [],
 	"random_scramble": False,
-	"allow_scramble": False
+	"allow_scramble": False,
+	"normal_name": ""
 }
 
 rank_js = {
@@ -34,6 +48,13 @@ MAX_TIME = 600
 def json_converter(o):
 	if isinstance(o, datetime.datetime):
 		return None
+
+
+class User:
+	def __init__(self, user_id, xp, energy):
+		self.user_id = user_id
+		self.xp = xp
+		self.energy = energy
 
 
 class ServerData:
@@ -54,7 +75,24 @@ class ServerData:
 		else:
 			shutil.copyfile('serverdata_staging.json', 'serverdata.json')
 
+	def try_update_server(self, server_id: str):
+		if 'servers' not in self.data:
+			self.data['servers'] = {}
+		if server_id not in self.data['servers']:
+			self.data['servers'][server_id] = server_js.copy()
+		else:
+			for key in server_js:
+				if key not in self.data['servers'][server_id]:
+					if isinstance(server_js[key], bool):
+						new_val = channel_js[key]
+					elif isinstance(server_js[key], str):
+						new_val = channel_js[key]
+					else:
+						new_val = channel_js[key].copy()
+					self.data['servers'][server_id][key] = new_val
+
 	def try_update_user(self, server_id: str, user_id: str):
+		self.try_update_server(server_id)
 		if user_id not in self.data['servers'][server_id]['users']:
 			self.data['servers'][server_id]['users'][user_id] = user_js.copy()
 		else:
@@ -67,6 +105,7 @@ class ServerData:
 					self.data['servers'][server_id]['users'][user_id][key] = new_val
 
 	def try_update_channel(self, server_id: str, channel_id: str):
+		self.try_update_server(server_id)
 		if 'channels' not in self.data['servers'][server_id]:
 			self.data['servers'][server_id]['channels'] = {}
 		if channel_id not in self.data['servers'][server_id]['channels']:
@@ -75,6 +114,8 @@ class ServerData:
 			for key in channel_js:
 				if key not in self.data['servers'][server_id]['channels'][channel_id]:
 					if isinstance(channel_js[key], bool):
+						new_val = channel_js[key]
+					elif isinstance(channel_js[key], str):
 						new_val = channel_js[key]
 					else:
 						new_val = channel_js[key].copy()
@@ -176,6 +217,19 @@ class ServerData:
 		self.try_update_channel(server_id, channel_id)
 		self.data['servers'][server_id]['channels'][channel_id]['allow_scramble'] = enabled
 
+	def enable_random_scramble(self, server_id: str, channel_id: str, enabled: bool):
+		self.try_update_channel(server_id, channel_id)
+		self.data['servers'][server_id]['channels'][channel_id]['random_scramble'] = enabled
+
+	def get_normal_name(self, server_id: str, channel_id: str):
+		self.try_update_channel(server_id, channel_id)
+		return self.data['servers'][server_id]['channels'][channel_id]['normal_name']
+
+	def set_normal_name(self, server_id: str, channel_id: str, normal_name: str):
+		self.try_update_channel(server_id, channel_id)
+		self.data['servers'][server_id]['channels'][channel_id]['normal_name'] = str(normal_name)
+		print(normal_name)
+
 	def get_shop_price(self, server_id: str, name: str):
 		if name not in self.data['servers'][server_id]['shop']:
 			return 0
@@ -192,6 +246,14 @@ class ServerData:
 	def set_flex_role_id(self, server_id: str, role_id: str):
 		self.data['servers'][server_id]['flex_role'] = role_id
 
+	def get_invite_link(self, server_id: str):
+		if 'invite_link' not in self.data['servers'][server_id]:
+			return None
+		return self.data['servers'][server_id]['invite_link']
+
+	def set_invite_link(self, server_id: str, invite_link: str):
+		self.data['servers'][server_id]['invite_link'] = invite_link
+
 	def time_since_active(self, server_id: str, user_id: str):
 		last = self.get_last_active(server_id, user_id)
 		if last is None:
@@ -200,6 +262,14 @@ class ServerData:
 		diff = now - last
 		secs = min(diff.total_seconds(), MAX_TIME)
 		return secs
+
+	def get_users(self, server_id: str) -> typing.List[User]:
+		users = []
+		for user in self.data['servers'][server_id]['users']:
+			xp = self.data['servers'][server_id]['users'][user]['xp']
+			energy = self.data['servers'][server_id]['users'][user]['energy']
+			users.append(User(user, xp, energy))
+		return users
 
 	def get_rank_xps(self, server_id):
 		ret = {}
@@ -222,3 +292,4 @@ class ServerData:
 		if 'random_scramble' not in chan_data or chan_data['random_scramble'] is not True:
 			return False
 		return True
+

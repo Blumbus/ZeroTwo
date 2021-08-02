@@ -217,6 +217,27 @@ class Moderator(commands.Cog):
     @commands.command()
     @commands.guild_only()
     @permissions.has_permissions(manage_roles=True)
+    async def enablerandomscramble(self, ctx, enabled: bool = True):
+        """ Allows occasional random scrambles in this channel. Use enablerandomscramble false to disable """
+
+        self.bot.server_data.enable_random_scramble(str(ctx.message.guild.id), str(ctx.message.channel.id), enabled)
+        set_string = 'Enabled'
+        if not enabled:
+            set_string = 'Disabled'
+        await ctx.send(f"{set_string} random scrambles for this channel")
+
+    @commands.command()
+    @commands.guild_only()
+    @permissions.has_permissions(manage_roles=True)
+    async def setinvitelink(self, ctx, invite_link: str):
+        """ Set the invite link the bot should use for the server """
+
+        self.bot.server_data.set_invite_link(str(ctx.message.guild.id), invite_link)
+        await ctx.send(f"Set this server's invite link to {invite_link}")
+
+    @commands.command()
+    @commands.guild_only()
+    @permissions.has_permissions(manage_roles=True)
     async def setshopprice(self, ctx, name: str, price: int):
         """ Sets the price of a shop item  """
 

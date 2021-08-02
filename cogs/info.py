@@ -32,6 +32,18 @@ class Information(commands.Cog):
         else:
             await ctx.send(f"Home channel: **#{home.name}** ({str(home.id)})")
 
+    @commands.command()
+    @commands.guild_only()
+    async def invitelink(self, ctx):
+        """ Get the invite link for the current server """
+
+        link = self.bot.server_data.get_invite_link(str(ctx.message.guild.id))
+        if link is not None:
+            await ctx.send(f"This server's invite link is {link}")
+        else:
+            await ctx.send("This server has no invite link set")
+
+
 
 def setup(bot):
     bot.add_cog(Information(bot))

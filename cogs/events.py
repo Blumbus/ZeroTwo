@@ -64,9 +64,7 @@ class Events(commands.Cog):
 		# Indicate that the bot has successfully booted up
 		print(f'Ready: {self.bot.user} | Servers: {len(self.bot.guilds)}')
 
-		await self.bot.change_presence(
-			activity=discord.CustomActivity(name=self.config.status)
-		)
+		await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=">help"))
 
 		self.autosave.start()
 
@@ -115,6 +113,13 @@ class Events(commands.Cog):
 						await message.author.add_roles(role)
 						await message.channel.send(
 							f"**{message.author.name}** advanced to the **{role.name}** role!")
+
+			if self.bot.server_data.can_random_scramble(message.channel):
+				rand = random.random()
+				if rand < 0.001:
+					fun = self.bot.get_cog('Fun_Commands')
+					scramb = await fun.get_scramble(message.channel)
+					await message.channel.send(scramb)
 
 
 def setup(bot):

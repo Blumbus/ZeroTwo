@@ -3,9 +3,12 @@ import discord
 from utils import permissions
 from discord.ext.commands import AutoShardedBot, DefaultHelpCommand
 
+from utils.serverdata import ServerData
+
 
 class Bot(AutoShardedBot):
     def __init__(self, *args, prefix=None, **kwargs):
+        self.server_data: ServerData = None
         super().__init__(*args, **kwargs)
 
     async def on_message(self, msg):
