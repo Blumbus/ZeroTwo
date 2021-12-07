@@ -102,12 +102,23 @@ class Events(commands.Cog):
 			message_id = reaction.message_id
 			user_id = reaction.user_id
 			if message_id == self.bot.server_data.get_raffle_freebie_message_id(str(server_id)):
-				self.bot.server_data.set_user_raffle_freebie(str(server_id), str(user_id), True)
+				if not self.bot.server_data.get_user_raffle_freebie(str(server_id), str(user_id)):
+					self.bot.server_data.set_user_raffle_freebie(str(server_id), str(user_id), True)
+					member = reaction.member
+					if member is not None:
+						new_amount = self.bot.server_data.get_user_raffle_amount(str(server_id), str(user_id))
+						raffle_name = self.bot.server_data.get_raffle_name(str(server_id))
+						member.send(f"You successfully claimed your **{5}** freebie tickets! Your new amount for the *{raffle_name}* raffle is **{new_amount}**")
 			elif message_id == self.bot.server_data.get_raffle_random_message_id(str(server_id)):
 				if self.bot.server_data.get_user_last_react_id(str(server_id), str(user_id)) != message_id:
 					num_tickets = self.bot.server_data.get_raffle_random_amount(str(server_id))
 					self.bot.server_data.give_user_raffle_tickets(str(server_id), str(user_id), num_tickets)
 					self.bot.server_data.set_user_last_react_id(str(server_id), str(user_id), message_id)
+					member = reaction.member
+					if member is not None:
+						new_amount = self.bot.server_data.get_user_raffle_amount(str(server_id), str(user_id))
+						raffle_name = self.bot.server_data.get_raffle_name(str(server_id))
+						member.send(f"You successfully claimed your **{num_tickets}** ticket{'' if num_tickets == 1 else 's'}! Your new amount for the *{raffle_name}* raffle is **{new_amount}**")
 
 	@commands.Cog.listener()
 	async def on_message(self, message):
@@ -141,7 +152,15 @@ class Events(commands.Cog):
 				rarity = self.bot.server_data.get_raffle_rarity(server_id)
 				if rand < rarity:
 					await asyncio.sleep(random.randrange(30, 300))
-					amount = random.randrange(1, 5)
+					amount = 1
+					if random.random() < 0.75:
+						amount += 1
+						if random.random() < 0.7:
+							amount += 1
+							if random.random() < 0.7:
+								amount += 1
+								if random.random() < 0.7:
+									amount += 1
 					text_options = [
 						f"**{str(amount)}** raffle ticket{'' if amount == 1 else 's'} randomly fall{'s' if amount == 1 else ''} from the sky!",
 						f"A passing van drops **{str(amount)}** raffle ticket{'' if amount == 1 else 's'} on the ground!",

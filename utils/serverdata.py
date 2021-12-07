@@ -307,6 +307,10 @@ class ServerData:
 		self.try_update_user(server_id, user_id)
 		self.data['servers'][server_id]['users'][user_id]['raffle_freebie'] = has_freebie
 
+	def get_user_raffle_freebie(self, server_id: str, user_id: str):
+		self.try_update_user(server_id, user_id)
+		return self.data['servers'][server_id]['users'][user_id]['raffle_freebie']
+
 	def give_user_raffle_tickets(self, server_id: str, user_id: str, num_tickets: int):
 		self.try_update_user(server_id, user_id)
 		self.data['servers'][server_id]['users'][user_id]['raffle_tickets'] += num_tickets
