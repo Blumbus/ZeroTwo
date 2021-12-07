@@ -108,7 +108,7 @@ class Events(commands.Cog):
 					if member is not None:
 						new_amount = self.bot.server_data.get_user_raffle_amount(str(server_id), str(user_id))
 						raffle_name = self.bot.server_data.get_raffle_name(str(server_id))
-						member.send(f"You successfully claimed your **{5}** freebie tickets! Your new amount for the *{raffle_name}* raffle is **{new_amount}**")
+						await member.send(f"You successfully claimed your **{5}** freebie tickets! Your new amount for the *{raffle_name}* raffle is **{new_amount}**")
 			elif message_id == self.bot.server_data.get_raffle_random_message_id(str(server_id)):
 				if self.bot.server_data.get_user_last_react_id(str(server_id), str(user_id)) != message_id:
 					num_tickets = self.bot.server_data.get_raffle_random_amount(str(server_id))
@@ -118,7 +118,7 @@ class Events(commands.Cog):
 					if member is not None:
 						new_amount = self.bot.server_data.get_user_raffle_amount(str(server_id), str(user_id))
 						raffle_name = self.bot.server_data.get_raffle_name(str(server_id))
-						member.send(f"You successfully claimed your **{num_tickets}** ticket{'' if num_tickets == 1 else 's'}! Your new amount for the *{raffle_name}* raffle is **{new_amount}**")
+						await member.send(f"You successfully claimed your **{num_tickets}** ticket{'' if num_tickets == 1 else 's'}! Your new amount for the *{raffle_name}* raffle is **{new_amount}**")
 
 	@commands.Cog.listener()
 	async def on_message(self, message):
