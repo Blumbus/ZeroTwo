@@ -101,24 +101,25 @@ class Events(commands.Cog):
 		if str(server_id) in self.bot.server_data.data['servers']:
 			message_id = reaction.message_id
 			user_id = reaction.user_id
-			if message_id == self.bot.server_data.get_raffle_freebie_message_id(str(server_id)):
-				if not self.bot.server_data.get_user_raffle_freebie(str(server_id), str(user_id)):
-					self.bot.server_data.set_user_raffle_freebie(str(server_id), str(user_id), True)
-					member = reaction.member
-					if member is not None:
-						new_amount = self.bot.server_data.get_user_raffle_amount(str(server_id), str(user_id))
-						raffle_name = self.bot.server_data.get_raffle_name(str(server_id))
-						await member.send(f"You successfully claimed your **{5}** freebie tickets! Your new amount for the *{raffle_name}* raffle is **{new_amount}**")
-			elif message_id == self.bot.server_data.get_raffle_random_message_id(str(server_id)):
-				if self.bot.server_data.get_user_last_react_id(str(server_id), str(user_id)) != message_id:
-					num_tickets = self.bot.server_data.get_raffle_random_amount(str(server_id))
-					self.bot.server_data.give_user_raffle_tickets(str(server_id), str(user_id), num_tickets)
-					self.bot.server_data.set_user_last_react_id(str(server_id), str(user_id), message_id)
-					member = reaction.member
-					if member is not None:
-						new_amount = self.bot.server_data.get_user_raffle_amount(str(server_id), str(user_id))
-						raffle_name = self.bot.server_data.get_raffle_name(str(server_id))
-						await member.send(f"You successfully claimed your **{num_tickets}** ticket{'' if num_tickets == 1 else 's'}! Your new amount for the *{raffle_name}* raffle is **{new_amount}**")
+			if user_id != self.bot.user.id:
+				if message_id == self.bot.server_data.get_raffle_freebie_message_id(str(server_id)):
+					if not self.bot.server_data.get_user_raffle_freebie(str(server_id), str(user_id)):
+						self.bot.server_data.set_user_raffle_freebie(str(server_id), str(user_id), True)
+						member = reaction.member
+						if member is not None:
+							new_amount = self.bot.server_data.get_user_raffle_amount(str(server_id), str(user_id))
+							raffle_name = self.bot.server_data.get_raffle_name(str(server_id))
+							await member.send(f"You successfully claimed your **{5}** freebie tickets! Your new amount for the *{raffle_name}* raffle is **{new_amount}**")
+				elif message_id == self.bot.server_data.get_raffle_random_message_id(str(server_id)):
+					if self.bot.server_data.get_user_last_react_id(str(server_id), str(user_id)) != message_id:
+						num_tickets = self.bot.server_data.get_raffle_random_amount(str(server_id))
+						self.bot.server_data.give_user_raffle_tickets(str(server_id), str(user_id), num_tickets)
+						self.bot.server_data.set_user_last_react_id(str(server_id), str(user_id), message_id)
+						member = reaction.member
+						if member is not None:
+							new_amount = self.bot.server_data.get_user_raffle_amount(str(server_id), str(user_id))
+							raffle_name = self.bot.server_data.get_raffle_name(str(server_id))
+							await member.send(f"You successfully claimed your **{num_tickets}** ticket{'' if num_tickets == 1 else 's'}! Your new amount for the *{raffle_name}* raffle is **{new_amount}**")
 
 	@commands.Cog.listener()
 	async def on_message(self, message):
