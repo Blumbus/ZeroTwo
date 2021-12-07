@@ -286,6 +286,15 @@ class Moderator(commands.Cog):
     @commands.command()
     @commands.guild_only()
     @permissions.has_permissions(manage_roles=True)
+    async def setrafflerarity(self, ctx, raffle_rarity: float):
+        """ Sets the rarity of a random raffle message in the current server  """
+
+        self.bot.server_data.set_raffle_rarity(str(ctx.message.guild.id), raffle_rarity)
+        await ctx.send(f"Set the raffle's random message rarity to {raffle_rarity}")
+
+    @commands.command()
+    @commands.guild_only()
+    @permissions.has_permissions(manage_roles=True)
     async def rafflewinner(self, ctx):
         """ Picks a random winner for the active raffle  """
 

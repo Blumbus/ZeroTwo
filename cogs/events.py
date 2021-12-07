@@ -138,7 +138,8 @@ class Events(commands.Cog):
 
 			if self.bot.server_data.get_raffle_active(server_id):
 				rand = random.random()
-				if rand < 0.002:
+				rarity = self.bot.server_data.get_raffle_rarity(server_id)
+				if rand < rarity:
 					await asyncio.sleep(random.randrange(30, 300))
 					amount = random.randrange(1, 5)
 					text_options = [
@@ -164,8 +165,10 @@ class Events(commands.Cog):
 					msg = await message.channel.send(text)
 					self.bot.server_data.set_raffle_random_message_id(server_id, msg.id)
 					self.bot.server_data.set_raffle_random_amount(server_id, amount)
+					ticket_emoji = chr(0x1F39F)
+					await msg.add_reaction(ticket_emoji)
 					
-					await asyncio.sleep(10)
+					await asyncio.sleep(60)
 					self.bot.server_data.set_raffle_random_message_id(server_id, 0)
 					await msg.edit(content=(text + " *(This message has run out of time)*"))
 					

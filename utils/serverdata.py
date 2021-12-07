@@ -19,6 +19,7 @@ server_js = {
 	"leave_message": "",
 	"raffle_active": False,
 	"raffle_name": "",
+	"raffle_rarity": 0.002,
 	"raffle_random_message_id": 0,
 	"raffle_random_amount": 1,
 	"raffle_freebie_message_id": 0,
@@ -91,7 +92,7 @@ class ServerData:
 		else:
 			for key in server_js:
 				if key not in self.data['servers'][server_id]:
-					if isinstance(server_js[key], bool) or isinstance(server_js[key], int)or isinstance(server_js[key], str):
+					if isinstance(server_js[key], bool) or isinstance(server_js[key], int) or isinstance(server_js[key], str) or isinstance(server_js[key], float):
 						new_val = server_js[key]
 					else:
 						new_val = server_js[key].copy()
@@ -104,7 +105,7 @@ class ServerData:
 		else:
 			for key in user_js:
 				if key not in self.data['servers'][server_id]['users'][user_id]:
-					if isinstance(user_js[key], bool) or isinstance(user_js[key], int) or isinstance(user_js[key], str):
+					if isinstance(user_js[key], bool) or isinstance(user_js[key], int) or isinstance(user_js[key], str) or isinstance(server_js[key], float):
 						new_val = user_js[key]
 					else:
 						new_val = user_js[key].copy()
@@ -119,7 +120,7 @@ class ServerData:
 		else:
 			for key in channel_js:
 				if key not in self.data['servers'][server_id]['channels'][channel_id]:
-					if isinstance(channel_js[key], bool) or isinstance(channel_js[key], int) or isinstance(channel_js[key], str):
+					if isinstance(channel_js[key], bool) or isinstance(channel_js[key], int) or isinstance(channel_js[key], str) or isinstance(server_js[key], float):
 						new_val = channel_js[key]
 					else:
 						new_val = channel_js[key].copy()
@@ -275,6 +276,12 @@ class ServerData:
 
 	def get_raffle_random_message_id(self, server_id: str):
 		return self.data['servers'][server_id]['raffle_random_message_id']
+
+	def set_raffle_rarity(self, server_id: str, rarity: float):
+		self.data['servers'][server_id]['raffle_rarity'] = rarity
+
+	def get_raffle_rarity(self, server_id: str):
+		return self.data['servers'][server_id]['raffle_rarity']
 
 	def set_raffle_random_amount(self, server_id: str, amount: int):
 		self.data['servers'][server_id]['raffle_random_amount'] = amount
