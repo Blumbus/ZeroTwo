@@ -31,6 +31,28 @@ class Fun_Commands(commands.Cog):
 
         await ctx.send(r[endpoint])
 
+    @commands.command()
+    @commands.guild_only()
+    async def raffle(self, ctx):
+        """ Shows your info for the server's current raffle """
+        raffle_active = self.bot.server_data.get_raffle_active(str(ctx.message.guild.id))
+        if raffle_active:
+            tickets = self.bot.server_data.get_user_raffle_amount(str(ctx.message.guild.id), str(ctx.author.id))
+            raffle_name = self.bot.server_data.get_raffle_name(str(ctx.message.guild.id))
+            await ctx.send(f"You have **{str(tickets)}** tickets entered for the *{raffle_name}* raffle. React to my random ticket messages in time to earn more. Good luck!")
+        else:
+            await ctx.send(f"There is no current active raffle")
+
+    async def randomimageapi(self, ctx, url, endpoint):
+        try:
+            r = await http.get(url, res_method="json", no_cache=True)
+        except aiohttp.ClientConnectorError:
+            return await ctx.send("The API seems to be down...")
+        except aiohttp.ContentTypeError:
+            return await ctx.send("The API returned an error or didn't return JSON...")
+
+        await ctx.send(r[endpoint])
+
     async def api_img_creator(self, ctx, url, filename, content=None):
         async with ctx.channel.typing():
             req = await http.get(url, res_method="read")

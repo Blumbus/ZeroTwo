@@ -57,7 +57,11 @@ class Shop(commands.Cog):
         for index in range(start, min(start + spots, len(users))):
             user = users[index]
             user_name = user.user_id
-            member = await self.bot.fetch_user(user.user_id)
+            member = None
+            try:
+                member = await self.bot.fetch_user(user.user_id)
+            except:
+                member = None
             if member is not None:
                 user_name = member.name
             embed.add_field(name=f'**Rank {index + 1}**', value=f'{user_name}: {user.xp} {self.config.mag_emoji}',

@@ -1,6 +1,7 @@
 import discord
 import re
 import asyncio
+import random
 
 from discord import Role
 from discord.ext import commands
@@ -261,6 +262,57 @@ class Moderator(commands.Cog):
 
         self.bot.server_data.set_energy(str(ctx.message.guild.id), str(user.id), energy)
         await ctx.send(f"Updated **{user.display_name}**'s magma energy to **{str(energy)}**")
+
+    @commands.command()
+    @commands.guild_only()
+    @permissions.has_permissions(manage_roles=True)
+    async def startraffle(self, ctx, *, raffle_name: str):
+        """ Starts a new raffle in the current server (This will ERASE any current raffle data!)  """
+
+        self.bot.server_data.clear_raffle_userdata(str(ctx.message.guild.id))
+        self.bot.server_data.set_raffle_active(str(ctx.message.guild.id), True)
+        self.bot.server_data.set_raffle_name(str(ctx.message.guild.id), raffle_name)
+        await ctx.send(f"**{raffle_name}** raffle has started!!")
+
+    @commands.command()
+    @commands.guild_only()
+    @permissions.has_permissions(manage_roles=True)
+    async def setrafflefreebieid(self, ctx, freebie_message_id: int):
+        """ Sets the raffle's freebie react message  """
+
+        self.bot.server_data.set_raffle_freebie_message_id(str(ctx.message.guild.id), freebie_message_id)
+        await ctx.send(f"Set the raffle's freebie message to id {freebie_message_id}")
+
+    @commands.command()
+    @commands.guild_only()
+    @permissions.has_permissions(manage_roles=True)
+    async def rafflewinner(self, ctx):
+        """ Picks a random winner for the active raffle  """
+
+        raffle_map = self.bot.server_data.get_raffle_map(str(ctx.message.guild.id))
+        total = 0
+        for user_id in raffle_map:
+            total += raffle_map[user_id]
+        windex = random.randrange(1, total)
+        sum = 0
+        winner_id = ""
+        for user_id in raffle_map:
+            sum += raffle_map[user_id]
+            if windex <= sum:
+                winner_id = user_id
+                break
+
+        await ctx.send(f"The raffle winner is <@{winner_id}>!!!")
+
+    @commands.command()
+    @commands.guild_only()
+    @permissions.has_permissions(manage_roles=True)
+    async def stopraffle(self, ctx):
+        """ Stops the active raffle in the current server  """
+
+        self.bot.server_data.set_raffle_active(str(ctx.message.guild.id), False)
+        raffle_name = self.bot.server_data.get_raffle_name(str(ctx.message.guild.id))
+        await ctx.send(f"**{raffle_name}** raffle has closed! Please wait for the winners to be drawn!")
 
 
 def setup(bot):

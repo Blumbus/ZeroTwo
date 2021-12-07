@@ -17,6 +17,11 @@ server_js = {
 	"main_channel": 0,
 	"join_message": "",
 	"leave_message": "",
+	"raffle_active": False,
+	"raffle_name": "",
+	"raffle_random_message_id": 0,
+	"raffle_random_amount": 1,
+	"raffle_freebie_message_id": 0,
 	"users": {},
 	"shop": {},
 	"ranks": {},
@@ -27,7 +32,10 @@ server_js = {
 user_js = {
 	"xp": 0,
 	"energy": 0,
-	"last_active": None
+	"last_active": None,
+	"raffle_freebie": False,
+	"raffle_tickets": 0,
+	"last_react_id": 0
 }
 
 channel_js = {
@@ -83,12 +91,10 @@ class ServerData:
 		else:
 			for key in server_js:
 				if key not in self.data['servers'][server_id]:
-					if isinstance(server_js[key], bool):
-						new_val = channel_js[key]
-					elif isinstance(server_js[key], str):
-						new_val = channel_js[key]
+					if isinstance(server_js[key], bool) or isinstance(server_js[key], int)or isinstance(server_js[key], str):
+						new_val = server_js[key]
 					else:
-						new_val = channel_js[key].copy()
+						new_val = server_js[key].copy()
 					self.data['servers'][server_id][key] = new_val
 
 	def try_update_user(self, server_id: str, user_id: str):
@@ -98,7 +104,7 @@ class ServerData:
 		else:
 			for key in user_js:
 				if key not in self.data['servers'][server_id]['users'][user_id]:
-					if isinstance(user_js[key], bool):
+					if isinstance(user_js[key], bool) or isinstance(user_js[key], int) or isinstance(user_js[key], str):
 						new_val = user_js[key]
 					else:
 						new_val = user_js[key].copy()
@@ -113,9 +119,7 @@ class ServerData:
 		else:
 			for key in channel_js:
 				if key not in self.data['servers'][server_id]['channels'][channel_id]:
-					if isinstance(channel_js[key], bool):
-						new_val = channel_js[key]
-					elif isinstance(channel_js[key], str):
+					if isinstance(channel_js[key], bool) or isinstance(channel_js[key], int) or isinstance(channel_js[key], str):
 						new_val = channel_js[key]
 					else:
 						new_val = channel_js[key].copy()
@@ -253,6 +257,71 @@ class ServerData:
 
 	def set_invite_link(self, server_id: str, invite_link: str):
 		self.data['servers'][server_id]['invite_link'] = invite_link
+
+	def set_raffle_active(self, server_id: str, is_active: bool):
+		self.data['servers'][server_id]['raffle_active'] = is_active
+
+	def get_raffle_active(self, server_id: str):
+		return self.data['servers'][server_id]['raffle_active']
+
+	def set_raffle_name(self, server_id: str, raffle_name: str):
+		self.data['servers'][server_id]['raffle_name'] = raffle_name
+
+	def get_raffle_name(self, server_id: str):
+		return self.data['servers'][server_id]['raffle_name']
+
+	def set_raffle_random_message_id(self, server_id: str, message_id: int):
+		self.data['servers'][server_id]['raffle_random_message_id'] = message_id
+
+	def get_raffle_random_message_id(self, server_id: str):
+		return self.data['servers'][server_id]['raffle_random_message_id']
+
+	def set_raffle_random_amount(self, server_id: str, amount: int):
+		self.data['servers'][server_id]['raffle_random_amount'] = amount
+
+	def get_raffle_random_amount(self, server_id: str):
+		return self.data['servers'][server_id]['raffle_random_amount']
+
+	def set_raffle_freebie_message_id(self, server_id: str, message_id: int):
+		self.data['servers'][server_id]['raffle_freebie_message_id'] = message_id
+
+	def get_raffle_freebie_message_id(self, server_id: str):
+		return self.data['servers'][server_id]['raffle_freebie_message_id']
+
+	def clear_raffle_userdata(self, server_id: str):
+		users = self.data['servers'][server_id]['users']
+		for user_id in users:
+			if 'raffle_freebie' in self.data['servers'][server_id]['users'][user_id]:
+				self.data['servers'][server_id]['users'][user_id]['raffle_freebie'] = False
+			if 'raffle_freebie' in self.data['servers'][server_id]['users'][user_id]:
+				self.data['servers'][server_id]['users'][user_id]['raffle_tickets'] = 0
+
+	def set_user_raffle_freebie(self, server_id: str, user_id: str, has_freebie: bool):
+		self.try_update_user(server_id, user_id)
+		self.data['servers'][server_id]['users'][user_id]['raffle_freebie'] = has_freebie
+
+	def give_user_raffle_tickets(self, server_id: str, user_id: str, num_tickets: int):
+		self.try_update_user(server_id, user_id)
+		self.data['servers'][server_id]['users'][user_id]['raffle_tickets'] += num_tickets
+
+	def set_user_last_react_id(self, server_id: str, user_id: str, react_id: int):
+		self.try_update_user(server_id, user_id)
+		self.data['servers'][server_id]['users'][user_id]['last_react_id'] = react_id
+
+	def get_user_last_react_id(self, server_id: str, user_id: str):
+		self.try_update_user(server_id, user_id)
+		return self.data['servers'][server_id]['users'][user_id]['last_react_id']
+
+	def get_raffle_map(self, server_id: str):
+		raffle_map = {}
+		users = self.data['servers'][server_id]['users']
+		for user_id in users:
+			raffle_map[user_id] = self.get_user_raffle_amount(server_id, user_id)
+		return raffle_map
+
+	def get_user_raffle_amount(self, server_id: str, user_id: str):
+		self.try_update_user(server_id, user_id)
+		return (5 if self.data['servers'][server_id]['users'][user_id]['raffle_freebie'] else 0) + self.data['servers'][server_id]['users'][user_id]['raffle_tickets']
 
 	def time_since_active(self, server_id: str, user_id: str):
 		last = self.get_last_active(server_id, user_id)

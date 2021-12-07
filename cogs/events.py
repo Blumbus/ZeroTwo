@@ -1,5 +1,6 @@
 import math
 import random
+import asyncio
 
 import discord
 from discord.ext import tasks, commands
@@ -95,6 +96,20 @@ class Events(commands.Cog):
 				await channel.send(message)
 
 	@commands.Cog.listener()
+	async def on_raw_reaction_add(self, reaction):
+		server_id = reaction.guild_id
+		if str(server_id) in self.bot.server_data.data['servers']:
+			message_id = reaction.message_id
+			user_id = reaction.user_id
+			if message_id == self.bot.server_data.get_raffle_freebie_message_id(str(server_id)):
+				self.bot.server_data.set_user_raffle_freebie(str(server_id), str(user_id), True)
+			elif message_id == self.bot.server_data.get_raffle_random_message_id(str(server_id)):
+				if self.bot.server_data.get_user_last_react_id(str(server_id), str(user_id)) != message_id:
+					num_tickets = self.bot.server_data.get_raffle_random_amount(str(server_id))
+					self.bot.server_data.give_user_raffle_tickets(str(server_id), str(user_id), num_tickets)
+					self.bot.server_data.set_user_last_react_id(str(server_id), str(user_id), message_id)
+
+	@commands.Cog.listener()
 	async def on_message(self, message):
 		if message.author is not None and message.author.id is not None and message.author.id != self.bot.user.id and message.guild is not None:
 			user_id = str(message.author.id)
@@ -116,10 +131,45 @@ class Events(commands.Cog):
 
 			if self.bot.server_data.can_random_scramble(message.channel):
 				rand = random.random()
-				if rand < 0.001:
+				if rand < 0.0005:
 					fun = self.bot.get_cog('Fun_Commands')
 					scramb = await fun.get_scramble(message.channel)
 					await message.channel.send(scramb)
+
+			if self.bot.server_data.get_raffle_active(server_id):
+				rand = random.random()
+				if rand < 0.002:
+					await asyncio.sleep(random.randrange(30, 300))
+					amount = random.randrange(1, 5)
+					text_options = [
+						f"**{str(amount)}** raffle ticket{'' if amount == 1 else 's'} randomly fall{'s' if amount == 1 else ''} from the sky!",
+						f"A passing van drops **{str(amount)}** raffle ticket{'' if amount == 1 else 's'} on the ground!",
+						f"A friendly crow lands next to you with **{str(amount)}** raffle ticket{'' if amount == 1 else 's'} in its mouth!"
+						f"You get hit by a truck and die. Your new isekai power is to gain **{str(amount)}** raffle ticket{'' if amount == 1 else 's'}!",
+						f"You meet a friendly cat with **{str(amount)}** raffle ticket{'' if amount == 1 else 's'} tucked into its collar!",
+						f"A gust of wind blows **{str(amount)}** raffle ticket{'' if amount == 1 else 's'} into your face!",
+						f"You spot **{str(amount)}** raffle ticket{'' if amount == 1 else 's'} caught in a tree's branches!",
+						f"You save a cat that was stuck in a tree. Its owner rewards you with **{str(amount)}** raffle ticket{'' if amount == 1 else 's'}!",
+						f"You spot **{str(amount)}** raffle ticket{'' if amount == 1 else 's'} on the ground!",
+						f"Mount Raffle has an enormous eruption, spraying raffle tickets everywhere! **10** of them fall in front of you!",
+						f"A bottle washes ashore with **{str(amount)}** raffle ticket{'' if amount == 1 else 's'} inside!",
+						f"Your boss offers to pay you **{str(amount)}** raffle ticket{'' if amount == 1 else 's'} instead of a living wage.",
+						f"Everyone gets a stimulus check of **{str(amount)}** raffle ticket{'' if amount == 1 else 's'}!",
+						f"An old pair of pants has **{str(amount)}** raffle ticket{'' if amount == 1 else 's'} in its pocket!",
+					]
+					pre = random.choice(text_options)
+					if 'Mount Raffle' in pre:
+						amount = 10
+					text = f"{pre} React to this message within a minute to get {'it' if amount == 1 else 'them'}!"
+					msg = await message.channel.send(text)
+					self.bot.server_data.set_raffle_random_message_id(server_id, msg.id)
+					self.bot.server_data.set_raffle_random_amount(server_id, amount)
+					
+					await asyncio.sleep(10)
+					self.bot.server_data.set_raffle_random_message_id(server_id, 0)
+					await msg.edit(content=(text + " *(This message has run out of time)*"))
+					
+					
 
 
 def setup(bot):
