@@ -165,7 +165,7 @@ class Events(commands.Cog):
 					text_options = [
 						f"**{str(amount)}** raffle ticket{'' if amount == 1 else 's'} randomly fall{'s' if amount == 1 else ''} from the sky!",
 						f"A passing van drops **{str(amount)}** raffle ticket{'' if amount == 1 else 's'} on the ground!",
-						f"A friendly crow lands next to you with **{str(amount)}** raffle ticket{'' if amount == 1 else 's'} in its mouth!"
+						f"A friendly crow lands next to you with **{str(amount)}** raffle ticket{'' if amount == 1 else 's'} in its mouth!",
 						f"You get hit by a truck and die. Your new isekai power is to gain **{str(amount)}** raffle ticket{'' if amount == 1 else 's'}!",
 						f"You meet a friendly cat with **{str(amount)}** raffle ticket{'' if amount == 1 else 's'} tucked into its collar!",
 						f"A gust of wind blows **{str(amount)}** raffle ticket{'' if amount == 1 else 's'} into your face!",
